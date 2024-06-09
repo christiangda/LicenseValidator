@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/Users/christian/git/github.com/christiangda/license-validator/build",
+  "command": "/usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_CHRONO_DYN_LINK -DBOOST_CHRONO_NO_LIB -DBOOST_FILESYSTEM_DYN_LINK -DBOOST_FILESYSTEM_NO_LIB -DBOOST_LOG_DYN_LINK -DBOOST_LOG_NO_LIB -DBOOST_LOG_SETUP_DYN_LINK -DBOOST_LOG_SETUP_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_PROGRAM_OPTIONS_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -I/Users/christian/git/github.com/christiangda/license-validator/build -I/opt/homebrew/Cellar/openssl@3/3.3.1/include -isystem /opt/homebrew/include -Wextra -Wno-unused-parameter -Wno-unused-variable -Wunused-but-set-variable -Wno-unused-function -Wno-unused-private-field -g -std=gnu++2b -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/LicenseValidator.dir/src/main.cpp.o -c /Users/christian/git/github.com/christiangda/license-validator/src/main.cpp",
+  "file": "/Users/christian/git/github.com/christiangda/license-validator/src/main.cpp",
+  "output": "CMakeFiles/LicenseValidator.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/christian/git/github.com/christiangda/license-validator/build",
+  "command": "/usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_CHRONO_DYN_LINK -DBOOST_CHRONO_NO_LIB -DBOOST_FILESYSTEM_DYN_LINK -DBOOST_FILESYSTEM_NO_LIB -DBOOST_LOG_DYN_LINK -DBOOST_LOG_NO_LIB -DBOOST_LOG_SETUP_DYN_LINK -DBOOST_LOG_SETUP_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_PROGRAM_OPTIONS_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -I/Users/christian/git/github.com/christiangda/license-validator/build -I/opt/homebrew/Cellar/openssl@3/3.3.1/include -isystem /opt/homebrew/include -Wextra -Wno-unused-parameter -Wno-unused-variable -Wunused-but-set-variable -Wno-unused-function -Wno-unused-private-field -g -std=gnu++2b -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/LicenseValidator.dir/src/License.cpp.o -c /Users/christian/git/github.com/christiangda/license-validator/src/License.cpp",
+  "file": "/Users/christian/git/github.com/christiangda/license-validator/src/License.cpp",
+  "output": "CMakeFiles/LicenseValidator.dir/src/License.cpp.o"
+}
+]

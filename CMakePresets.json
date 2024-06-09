@@ -1,0 +1,16 @@
+{
+	"version": 6,
+	"configurePresets": [
+		{
+			"name": "Default",
+			"description": "Default configurations",
+			"hidden": false,
+			"generator": "Unix Makefiles",
+			"binaryDir": "${workspaceFolder}/build",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+			}
+		}
+	]
+}
