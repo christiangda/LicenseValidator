@@ -45,6 +45,9 @@ add_executable("${PROJECT_NAME}"
 
                 src/License.h
                 src/License.cpp
+
+                src/Utils.h
+                src/Utils.cpp
 )
 
 # Link the executable to the depthai-core library

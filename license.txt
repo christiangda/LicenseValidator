@@ -1,0 +1,3 @@
+Product Name: FaceDetector
+License Key: 7afcfb0c-da67-4d5d-b1c4-867ff2701f59
+Expires: 2024-06-15

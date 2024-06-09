@@ -1,9 +1,11 @@
+#include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
 
 #include "Config.h"
 #include "License.h"
+#include "Utils.h"
 
 namespace po = boost::program_options;
 
@@ -17,7 +19,7 @@ int main(int argc, char **argv)
 	// Global Options
 	po::options_description globalOptions("Global Options");
 	globalOptions.add_options()("public-key-base64", po::value<std::string>(), "Public key in base64 format");
-	globalOptions.add_options()("license-key-base64", po::value<std::string>(), "License key in base64 format");
+	globalOptions.add_options()("license-key", po::value<std::string>(), "License key in base64 format");
 
 	po::options_description allOptions;
 	allOptions.add(helpVersionOptions);
@@ -56,33 +58,76 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (!vm.count("license-key-base64"))
+	if (!vm.count("license-key"))
 	{
-		std::cerr << "License key is required (--license-key-base64)" << std::endl;
+		std::cerr << "License key is required (--license-key)" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// get the values of the options
 	std::string publicKeyBase64 = vm["public-key-base64"].as<std::string>();
-	std::string licenseKeyBase64 = vm["license-key-base64"].as<std::string>();
+	std::string licenseKey = vm["license-key"].as<std::string>();
 
-	// decode the base64 strings
+	// License key has the format: key/{BASE64_KEY}.{BASE64_SIGNATURE}
+	// we need to split the key and signature
+	std::vector<std::string> parts = ssplit(licenseKey, "|");
+	if (parts.size() != 0)
+	{
+		BOOST_LOG_TRIVIAL(info) << "parts.size() = " << parts.size();
+		for (auto &part : parts)
+		{
+			BOOST_LOG_TRIVIAL(info) << "part = " << part;
+		}
+	}
+	if (parts.size() != 2)
+	{
+		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no '/' separator";
+		return EXIT_FAILURE;
+	}
+	std::string identifier = parts[0];
+	std::string composedKey = parts[1];
+
+	// check the identifier is key
+	if (identifier != "key")
+	{
+		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no prefix 'key'";
+		return EXIT_FAILURE;
+	}
+
+	// split the composed key into key and signature
+	std::vector<std::string> keySignature = ssplit(composedKey, ".");
+	if (keySignature.size() != 2)
+	{
+		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no '.' separator";
+		return EXIT_FAILURE;
+	}
+	std::string licenseContentBase64 = keySignature[0];
+	std::string licenseSignatureBase64 = keySignature[1];
+
+	// decode the base64 for the public key
 	std::string publicKey = base64Decode(publicKeyBase64);
-	std::string licenseKey = base64Decode(licenseKeyBase64);
+	std::string licenseContent = base64Decode(licenseContentBase64);
+	std::string licenseSignature = base64Decode(licenseSignatureBase64);
 
 	// show the decoded strings
-	std::cout << "Public Key: " << publicKey << std::endl;
-	// std::cout << "License Key: " << licenseKey << std::endl;
+	std::cout
+			<< "Public Key: \n"
+			<< publicKey << std::endl;
+	std::cout << "License Content: \n"
+						<< licenseContent << std::endl;
+	std::cout << "License Signature: \n"
+						<< licenseSignature << std::endl;
+	std::cout << std::endl;
 
 	// convert the licenseKey from string to unsigned char []
-	size_t length = licenseKey.size();
-	unsigned char licenseKeyChar[length + 1]; // +1 for the null character
+	size_t licenseSignatureLength = licenseSignature.size();
+	unsigned char licenseSignatureChar[licenseSignatureLength + 1]; // +1 for the null character
 
-	std::copy(licenseKey.begin(), licenseKey.end(), licenseKeyChar);
-	licenseKeyChar[length] = '\0'; // Add null character at the end
+	std::copy(licenseSignature.begin(), licenseSignature.end(), licenseSignatureChar);
+	licenseSignatureChar[licenseSignatureLength] = '\0'; // Add null character at the end
 
 	// validate the license key
-	bool valid = verifyLicense(licenseKeyChar, publicKey);
+	bool valid = verifyLicense(licenseContent, licenseSignatureChar, publicKey);
 
 	// show the result
 	if (valid)

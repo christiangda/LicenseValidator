@@ -75,7 +75,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	return pkey;
 }
 
-bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
+bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string enc_pub_key)
 {
 	EVP_PKEY *pkey = loadRsaPemPubKey(enc_pub_key);
 	if (pkey == NULL)
@@ -85,7 +85,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 		return false;
 	}
 
-	BIO *bio = BIO_new_mem_buf(&license, sizeof(license));
+	BIO *bio = BIO_new_mem_buf(licenseContent.c_str(), licenseContent.size());
 	if (bio == NULL)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to create BIO";
@@ -114,7 +114,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 		return false;
 	}
 
-	if (EVP_PKEY_verify(ctx, license, sizeof(license), NULL, 0) <= 0)
+	if (EVP_PKEY_verify(ctx, licenseSignature, sizeof(licenseSignature), (unsigned char *)licenseContent.c_str(), licenseContent.size()) <= 0)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to verify license";
 		EVP_PKEY_CTX_free(ctx);
