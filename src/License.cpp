@@ -30,21 +30,23 @@ std::string base64Decode(const std::string enc)
 }
 
 // Load a RSA public key from a PEM string
-EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
+EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 {
 	OSSL_DECODER_CTX *dctx;
-	EVP_PKEY *pkey = NULL;
+	EVP_PKEY *pkey = NULL;				/* the decoded key */
 	const char *format = "PEM";		/* NULL for any format */
 	const char *structure = NULL; /* any structure */
 	const char *keytype = "RSA";	/* NULL for any key */
 
 	BIO *bio = BIO_new_mem_buf(enc_pub_key.c_str(), enc_pub_key.size());
+	BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
 	dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure, keytype, EVP_PKEY_PUBLIC_KEY, NULL, NULL);
 	if (dctx == NULL)
 	{
 		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_CTX_new_for_pkey failed";
 		BIO_free_all(bio);
+		ERR_print_errors_fp(stdout);
 	}
 
 	// Decode the public key from the bio
@@ -53,6 +55,7 @@ EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
 		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_from_bio failed";
 		BIO_free_all(bio);
 		OSSL_DECODER_CTX_free(dctx);
+		ERR_print_errors_fp(stdout);
 		return NULL;
 	}
 
@@ -62,6 +65,7 @@ EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
 		BOOST_LOG_TRIVIAL(error) << "pkey is NULL";
 		BIO_free_all(bio);
 		OSSL_DECODER_CTX_free(dctx);
+		ERR_print_errors_fp(stdout);
 		return NULL;
 	}
 
@@ -73,10 +77,11 @@ EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
 
 bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 {
-	EVP_PKEY *pkey = load_rsa_pem_pub_key(enc_pub_key);
+	EVP_PKEY *pkey = loadRsaPemPubKey(enc_pub_key);
 	if (pkey == NULL)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to load RSA public key";
+		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
@@ -85,6 +90,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to create BIO";
 		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
@@ -94,6 +100,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 		BOOST_LOG_TRIVIAL(error) << "Failed to create EVP_PKEY_CTX";
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
@@ -103,6 +110,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 		EVP_PKEY_CTX_free(ctx);
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
@@ -112,6 +120,7 @@ bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 		EVP_PKEY_CTX_free(ctx);
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
