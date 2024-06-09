@@ -30,10 +30,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.85.0 REQUIRED
             COMPONENTS
                 program_options
-                log
-                system
                 log_setup
-                filesystem
             REQUIRED
 )
 include_directories(${Boost_INCLUDE_DIRS})

@@ -40,13 +40,14 @@ EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
 
 	BIO *bio = BIO_new_mem_buf(enc_pub_key.c_str(), enc_pub_key.size());
 
-	dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure, keytype, OSSL_KEYMGMT_SELECT_KEYPAIR, NULL, NULL);
+	dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure, keytype, EVP_PKEY_PUBLIC_KEY, NULL, NULL);
 	if (dctx == NULL)
 	{
 		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_CTX_new_for_pkey failed";
 		BIO_free_all(bio);
 	}
 
+	// Decode the public key from the bio
 	if (!OSSL_DECODER_from_bio(dctx, bio))
 	{
 		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_from_bio failed";
@@ -70,7 +71,7 @@ EVP_PKEY *load_rsa_pem_pub_key(const std::string enc_pub_key)
 	return pkey;
 }
 
-bool verifyLicense(const std::string license, const std::string enc_pub_key)
+bool verifyLicense(const unsigned char *license, const std::string enc_pub_key)
 {
 	EVP_PKEY *pkey = load_rsa_pem_pub_key(enc_pub_key);
 	if (pkey == NULL)
@@ -79,7 +80,7 @@ bool verifyLicense(const std::string license, const std::string enc_pub_key)
 		return false;
 	}
 
-	BIO *bio = BIO_new_mem_buf(license.c_str(), license.size());
+	BIO *bio = BIO_new_mem_buf(&license, sizeof(license));
 	if (bio == NULL)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to create BIO";
@@ -105,7 +106,7 @@ bool verifyLicense(const std::string license, const std::string enc_pub_key)
 		return false;
 	}
 
-	if (EVP_PKEY_verify(ctx, (const unsigned char *)license.c_str(), license.size(), (const unsigned char *)enc_pub_key.c_str(), enc_pub_key.size()) <= 0)
+	if (EVP_PKEY_verify(ctx, license, sizeof(license), NULL, 0) <= 0)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Failed to verify license";
 		EVP_PKEY_CTX_free(ctx);
