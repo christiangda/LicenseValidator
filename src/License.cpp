@@ -30,7 +30,7 @@ std::string base64Decode(const std::string enc)
 }
 
 // Load a RSA public key from a PEM string
-EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
+EVP_PKEY *loadRsaPemPubKey(const std::string pubkey)
 {
 	OSSL_DECODER_CTX *dctx;
 	EVP_PKEY *pkey = NULL;				/* the decoded key */
@@ -38,7 +38,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	const char *structure = NULL; /* any structure */
 	const char *keytype = "RSA";	/* NULL for any key */
 
-	BIO *bio = BIO_new_mem_buf(enc_pub_key.c_str(), enc_pub_key.size());
+	BIO *bio = BIO_new_mem_buf(pubkey.c_str(), pubkey.size());
 	BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
 	dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure, keytype, EVP_PKEY_PUBLIC_KEY, NULL, NULL);
@@ -75,9 +75,10 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	return pkey;
 }
 
-bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string enc_pub_key)
+// Validate a license key
+bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string pubkey)
 {
-	EVP_PKEY *pkey = loadRsaPemPubKey(enc_pub_key);
+	EVP_PKEY *pkey = loadRsaPemPubKey(pubkey);
 	if (pkey == NULL)
 	{
 		std::cerr << "Failed to load public key" << std::endl;

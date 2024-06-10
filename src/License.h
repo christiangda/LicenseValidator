@@ -9,9 +9,9 @@
 std::string base64Decode(const std::string enc);
 
 // Load a RSA private key from a PEM string
-EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key);
+EVP_PKEY *loadRsaPemPubKey(const std::string pubkey);
 
 // Validate a license key
-bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string enc_pub_key);
+bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string pubkey);
 
 #endif // LICENSE_H
