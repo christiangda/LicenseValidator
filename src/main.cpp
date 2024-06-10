@@ -117,6 +117,10 @@ int main(int argc, char **argv)
 	const unsigned char *licenseContentBytes = reinterpret_cast<const unsigned char *>(licenseContent.c_str());
 	const unsigned char *licenseSignatureBytes = reinterpret_cast<const unsigned char *>(licenseSignature.c_str());
 
+	// size of the licenseContent and licenseSignature
+	size_t licenseContentSize = licenseContent.size();
+	size_t licenseSignatureSize = licenseSignature.size();
+
 	// show the decoded strings
 	std::cout
 			<< "Public Key: \n"
@@ -129,7 +133,7 @@ int main(int argc, char **argv)
 	std::cout << std::endl;
 
 	// validate the license key
-	bool valid = verifyLicense(licenseContentBytes, licenseSignatureBytes, publicKey);
+	bool valid = verifyLicense(licenseContentBytes, licenseContentSize, licenseSignatureBytes, licenseSignatureSize, publicKey);
 
 	// show the result
 	if (valid)
