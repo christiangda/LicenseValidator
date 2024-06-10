@@ -11,6 +11,6 @@ std::vector<std::string> ssplit(std::string str, std::string delim);
 std::string sreplace(std::string str, const std::string &from, const std::string &to);
 
 // Print a hex string
-void printHex(const unsigned char *data, size_t size);
+void printHex(std::vector<unsigned char> data);
 
 #endif // UTILS_H

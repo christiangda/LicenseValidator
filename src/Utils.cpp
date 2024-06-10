@@ -37,8 +37,9 @@ std::string sreplace(std::string str, const std::string &from, const std::string
 }
 
 // Print a hex string
-void printHex(const unsigned char *data, size_t size)
+void printHex(std::vector<unsigned char> data)
 {
+	size_t size = data.size();
 	size_t offset = 0;
 	for (size_t i = 0; i < size; i += 16)
 	{

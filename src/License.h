@@ -12,6 +12,6 @@ std::string base64Decode(const std::string enc);
 EVP_PKEY *loadRsaPemPubKey(const std::string pubkey);
 
 // Validate a license key
-bool verifyLicense(const unsigned char *licenseContent, const unsigned char *licenseSignature, const std::string pubkey);
+bool verifyLicense(std::vector<unsigned char> licenseContent, std::vector<unsigned char> licenseSignature, const std::string pubkey);
 
 #endif // LICENSE_H
