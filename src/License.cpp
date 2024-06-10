@@ -1,5 +1,6 @@
 #include "License.h"
 
+#include <iostream>
 #include <openssl/bio.h>
 #include <openssl/decoder.h>
 #include <openssl/err.h>
@@ -8,10 +9,9 @@
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <stdio.h>
+#include <string>
 
 #include <boost/beast/core/detail/base64.hpp>
-#include <boost/log/trivial.hpp>
-#include <string>
 
 using namespace boost::beast::detail;
 
@@ -44,7 +44,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, format, structure, keytype, EVP_PKEY_PUBLIC_KEY, NULL, NULL);
 	if (dctx == NULL)
 	{
-		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_CTX_new_for_pkey failed";
+		std::cerr << "OSSL_DECODER_CTX_new_for_pkey failed" << std::endl;
 		BIO_free_all(bio);
 		ERR_print_errors_fp(stdout);
 	}
@@ -52,7 +52,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	// Decode the public key from the bio
 	if (!OSSL_DECODER_from_bio(dctx, bio))
 	{
-		BOOST_LOG_TRIVIAL(error) << "OSSL_DECODER_from_bio failed";
+		std::cerr << "OSSL_DECODER_from_bio failed" << std::endl;
 		BIO_free_all(bio);
 		OSSL_DECODER_CTX_free(dctx);
 		ERR_print_errors_fp(stdout);
@@ -62,7 +62,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string enc_pub_key)
 	// pkey is created with the decoded data from the bio
 	if (pkey == NULL)
 	{
-		BOOST_LOG_TRIVIAL(error) << "pkey is NULL";
+		std::cerr << "Failed to decode public key" << std::endl;
 		BIO_free_all(bio);
 		OSSL_DECODER_CTX_free(dctx);
 		ERR_print_errors_fp(stdout);
@@ -80,7 +80,7 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 	EVP_PKEY *pkey = loadRsaPemPubKey(enc_pub_key);
 	if (pkey == NULL)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to load RSA public key";
+		std::cerr << "Failed to load public key" << std::endl;
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
@@ -88,7 +88,7 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 	BIO *bio = BIO_new_mem_buf(licenseContent.c_str(), licenseContent.size());
 	if (bio == NULL)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to create BIO";
+		std::cerr << "Failed to create BIO" << std::endl;
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
@@ -97,7 +97,7 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	if (ctx == NULL)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to create EVP_PKEY_CTX";
+		std::cerr << "Failed to create EVP_PKEY_CTX" << std::endl;
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
@@ -106,7 +106,7 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 
 	if (EVP_PKEY_verify_init(ctx) <= 0)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to initialize EVP_PKEY_verify";
+		std::cerr << "Failed to initialize EVP_PKEY_CTX" << std::endl;
 		EVP_PKEY_CTX_free(ctx);
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
@@ -116,7 +116,7 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 
 	if (EVP_PKEY_verify(ctx, licenseSignature, sizeof(licenseSignature), (unsigned char *)licenseContent.c_str(), licenseContent.size()) <= 0)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Failed to verify license";
+		std::cerr << "Failed to verify license" << std::endl;
 		EVP_PKEY_CTX_free(ctx);
 		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);

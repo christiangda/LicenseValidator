@@ -1,4 +1,3 @@
-#include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
@@ -73,15 +72,15 @@ int main(int argc, char **argv)
 	std::vector<std::string> parts = ssplit(licenseKey, "|");
 	if (parts.size() != 0)
 	{
-		BOOST_LOG_TRIVIAL(info) << "parts.size() = " << parts.size();
+		std::cout << "parts.size() = " << parts.size() << std::endl;
 		for (auto &part : parts)
 		{
-			BOOST_LOG_TRIVIAL(info) << "part = " << part;
+			std::cout << "part = " << part << std::endl;
 		}
 	}
 	if (parts.size() != 2)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no '/' separator";
+		std::cerr << "Invalid license.dat file, no '|' separator" << std::endl;
 		return EXIT_FAILURE;
 	}
 	std::string identifier = parts[0];
@@ -90,7 +89,7 @@ int main(int argc, char **argv)
 	// check the identifier is key
 	if (identifier != "key")
 	{
-		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no prefix 'key'";
+		std::cerr << "Invalid license.dat file, invalid identifier" << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -98,7 +97,7 @@ int main(int argc, char **argv)
 	std::vector<std::string> keySignature = ssplit(composedKey, ".");
 	if (keySignature.size() != 2)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Invalid license.dat file, no '.' separator";
+		std::cerr << "Invalid license.dat file, no '.' separator" << std::endl;
 		return EXIT_FAILURE;
 	}
 	std::string licenseContentBase64 = keySignature[0];
