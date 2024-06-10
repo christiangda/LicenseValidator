@@ -107,7 +107,8 @@
     "semaphore": "cpp",
     "shared_mutex": "cpp",
     "thread": "cpp",
-    "ranges": "cpp"
+    "ranges": "cpp",
+    "numeric": "cpp"
   },
   "cSpell.words": [
     "dctx",
@@ -119,8 +120,10 @@
     "KEYPAIR",
     "Manip",
     "opencv",
+    "openssl",
     "OSSL",
     "pubkey",
+    "pubout",
     "sreplace",
     "ssplit",
     "Tracklet",

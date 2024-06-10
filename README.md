@@ -4,9 +4,10 @@ This is c++ project to validate license files base on the public key
 
 ## How to License the software
 
-Yes, you can implement a licensing system to distribute your app using private certificates and the expiration date. This system is often used in professional enterprise software. You can create a unique certificate for each client (identified by some unique property such as Company Name), sign it using your private key, and set an expiration date within the certificate.
+Create a Private and Public Key pair using the `openssl` tool. The private key will be used to sign the license, and the public key will be used to verify the signature.
+The license file will contain information such as the product name, license key, and expiration date. This file will be signed using the private key to generate a signature file.
 
-Here's an overview of the process:
+## Process
 
 ### 1. Generate a Private and Public Key
 
@@ -14,10 +15,10 @@ You will need a private key that you will use throughout the process to sign the
 
 ```bash
 # Generate a private key
-openssl genrsa -out private-rsa.pem 2048
+openssl genrsa -out private-key-rsa.pem 4096
 
 # Extract the public key from the private key
-openssl rsa -in private-rsa.pem -pubout -out public-rsa.pem
+openssl rsa -in private-key-rsa.pem -pubout -out public-key-rsa.pem
 ```
 
 ### 2. Create License file and Sign it
@@ -25,27 +26,28 @@ openssl rsa -in private-rsa.pem -pubout -out public-rsa.pem
 Once you have generated a private key, you can use it to sign the license:
 
 ```bash
-# Create a license file with the product name, license key, and expiration date
+# Create a license file with the product na+me, license key, and expiration date
 cat > license.txt <<EOF
-Product Name: FaceDetector
-License Key: 7afcfb0c-da67-4d5d-b1c4-867ff2701f59
-Expires: 2024-06-15
+Product Name: My Product
+Device ID: 18443010C117490E00
+Expires: 2024-06-30
 EOF
 
 # Sign the license data with SHA256 hashing and RSA algorithm
-openssl dgst -sha256 -sign private-rsa.pem -out license.txt.sha256 license.txt
+openssl dgst -sha256 -sign private-key-rsa.pem -out license.txt.sha256.sign license.txt
 ```
 
-This will generate a signature file `license.txt.sha256`, which is binary data that can be used to verify the license.
+This will generate a signature file `license.txt.sha256.sign`, which is binary data that can be used to verify the license.
 
-### 3. License Verification
+### 3. License Verification (using openssl)
 
 For license verification, the customer's software needs your public key to verify the signature:
 
 The verification process looks like this:
 
 ```bash
-openssl dgst -sha256 -verify public-rsa.pem -signature license.txt.sha256 license.txt
+# # Sign the file using sha256 digest and PKCS1 padding scheme
+openssl dgst -sha256 -verify public-key-rsa.pem -signature license.txt.sha256.sign license.txt
 ```
 
 If the license is valid, this command will print `Verified OK`. Otherwise, it will print `Verification Failure`.
@@ -60,21 +62,39 @@ Remember to securely protect your private key. If it gets into the wrong hands, 
 
 ### 5. Packaging and Distribution
 
-We must create a licese.base64 file with the public key and the license file. This file will be used to validate the license.  The format must be as follows:
+We must create a license.key file with the public key and the license file. This file will be used to validate the license.  The format must be as follows:
 
-format: key/{BASE64_KEY}.{BASE64_SIGNATURE}
+format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 
 ```bash
-# Create a license.base64 file with the public key and the license file
-cat > license.dat <<EOF
-key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256 | tr -d '\n')
+# Create a license.key file with the public key and the license file
+cat > license.key <<EOF
+key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')
 EOF
 ```
 
-### 6. Run the program
+### 6. License Validation (using the LicenseValidator program)
 
-To run the program, you must pass the license.base64 file as an argument. The program will validate the license and print the result.
+Install MacOS dependencies:
 
 ```bash
-./build/LicenseValidator --license-key $(cat license.dat) --public-key-base64 $(base64 --input public-rsa.pem | tr -d '\n')
+brew install cmake
+brew install clang
+brew install clang-format
+
+brew install boost
+brew install openssl
+```
+
+Build the LicenseValidator program using the following commands:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+To run the program, you must pass the license.key and the public key as arguments. The program will validate the license and print the result.
+
+```bash
+./build/LicenseValidator --license-key $(cat license.key) --public-key-base64 $(base64 --input public-key-rsa.pem | tr -d '\n')
 ```

@@ -1,5 +1,6 @@
 #include <boost/program_options.hpp>
 
+#include <iomanip>
 #include <iostream>
 
 #include "Config.h"
@@ -18,7 +19,7 @@ int main(int argc, char **argv)
 	// Global Options
 	po::options_description globalOptions("Global Options");
 	globalOptions.add_options()("public-key-base64", po::value<std::string>(), "Public key in base64 format");
-	globalOptions.add_options()("license-key", po::value<std::string>(), "License key in base64 format");
+	globalOptions.add_options()("license-key", po::value<std::string>(), "License key content in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}");
 
 	po::options_description allOptions;
 	allOptions.add(helpVersionOptions);
@@ -67,9 +68,13 @@ int main(int argc, char **argv)
 	std::string publicKeyBase64 = vm["public-key-base64"].as<std::string>();
 	std::string licenseKey = vm["license-key"].as<std::string>();
 
-	// License key has the format: key/{BASE64_KEY}.{BASE64_SIGNATURE}
+	// License key has the format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 	// we need to split the key and signature
-	std::vector<std::string> parts = ssplit(licenseKey, "|");
+	const std::string LICENSE_DELIMITER = "|";
+	const std::string LICENSE_KEY_DELIMITER = ".";
+	const std::string LICENSE_KEY_PREFIX = "key";
+
+	std::vector<std::string> parts = ssplit(licenseKey, LICENSE_DELIMITER);
 	if (parts.size() != 0)
 	{
 		std::cout << "parts.size() = " << parts.size() << std::endl;
@@ -80,33 +85,37 @@ int main(int argc, char **argv)
 	}
 	if (parts.size() != 2)
 	{
-		std::cerr << "Invalid license.dat file, no '|' separator" << std::endl;
+		std::cerr << "Invalid license.key file, no '" << LICENSE_DELIMITER << "' separator" << std::endl;
 		return EXIT_FAILURE;
 	}
 	std::string identifier = parts[0];
 	std::string composedKey = parts[1];
 
 	// check the identifier is key
-	if (identifier != "key")
+	if (identifier != LICENSE_KEY_PREFIX)
 	{
-		std::cerr << "Invalid license.dat file, invalid identifier" << std::endl;
+		std::cerr << "Invalid license.key file, invalid identifier, not '" << LICENSE_KEY_PREFIX << "' present" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// split the composed key into key and signature
-	std::vector<std::string> keySignature = ssplit(composedKey, ".");
+	std::vector<std::string> keySignature = ssplit(composedKey, LICENSE_KEY_DELIMITER);
 	if (keySignature.size() != 2)
 	{
-		std::cerr << "Invalid license.dat file, no '.' separator" << std::endl;
+		std::cerr << "Invalid license.key file, no '" << LICENSE_KEY_DELIMITER << "' separator" << std::endl;
 		return EXIT_FAILURE;
 	}
 	std::string licenseContentBase64 = keySignature[0];
 	std::string licenseSignatureBase64 = keySignature[1];
 
-	// decode the base64 for the public key
+	// decode (base64) the public key, license content and license signature
 	std::string publicKey = base64Decode(publicKeyBase64);
 	std::string licenseContent = base64Decode(licenseContentBase64);
 	std::string licenseSignature = base64Decode(licenseSignatureBase64);
+
+	// convert the licenseContent and licenseSignature from string to unsigned char *
+	const unsigned char *licenseContentBytes = reinterpret_cast<const unsigned char *>(licenseContent.c_str());
+	const unsigned char *licenseSignatureBytes = reinterpret_cast<const unsigned char *>(licenseSignature.c_str());
 
 	// show the decoded strings
 	std::cout
@@ -114,19 +123,13 @@ int main(int argc, char **argv)
 			<< publicKey << std::endl;
 	std::cout << "License Content: \n"
 						<< licenseContent << std::endl;
-	std::cout << "License Signature: \n"
-						<< licenseSignature << std::endl;
+	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
+	printHex(licenseSignatureBytes, licenseSignature.size());
+
 	std::cout << std::endl;
 
-	// convert the licenseKey from string to unsigned char []
-	size_t licenseSignatureLength = licenseSignature.size();
-	unsigned char licenseSignatureChar[licenseSignatureLength + 1]; // +1 for the null character
-
-	std::copy(licenseSignature.begin(), licenseSignature.end(), licenseSignatureChar);
-	licenseSignatureChar[licenseSignatureLength] = '\0'; // Add null character at the end
-
 	// validate the license key
-	bool valid = verifyLicense(licenseContent, licenseSignatureChar, publicKey);
+	bool valid = verifyLicense(licenseContentBytes, licenseSignatureBytes, publicKey);
 
 	// show the result
 	if (valid)

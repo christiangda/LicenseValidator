@@ -32,7 +32,7 @@ std::string base64Decode(const std::string enc)
 // Load a RSA public key from a PEM string
 EVP_PKEY *loadRsaPemPubKey(const std::string pubkey)
 {
-	OSSL_DECODER_CTX *dctx;
+	OSSL_DECODER_CTX *dctx;				/* the decoder context */
 	EVP_PKEY *pkey = NULL;				/* the decoded key */
 	const char *format = "PEM";		/* NULL for any format */
 	const char *structure = NULL; /* any structure */
@@ -76,7 +76,7 @@ EVP_PKEY *loadRsaPemPubKey(const std::string pubkey)
 }
 
 // Validate a license key
-bool verifyLicense(const std::string licenseContent, const unsigned char *licenseSignature, const std::string pubkey)
+bool verifyLicense(const unsigned char *licenseContent, const unsigned char *licenseSignature, const std::string pubkey)
 {
 	EVP_PKEY *pkey = loadRsaPemPubKey(pubkey);
 	if (pkey == NULL)
@@ -86,20 +86,10 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 		return false;
 	}
 
-	BIO *bio = BIO_new_mem_buf(licenseContent.c_str(), licenseContent.size());
-	if (bio == NULL)
-	{
-		std::cerr << "Failed to create BIO" << std::endl;
-		EVP_PKEY_free(pkey);
-		ERR_print_errors_fp(stdout);
-		return false;
-	}
-
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	if (ctx == NULL)
 	{
 		std::cerr << "Failed to create EVP_PKEY_CTX" << std::endl;
-		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
@@ -109,24 +99,41 @@ bool verifyLicense(const std::string licenseContent, const unsigned char *licens
 	{
 		std::cerr << "Failed to initialize EVP_PKEY_CTX" << std::endl;
 		EVP_PKEY_CTX_free(ctx);
-		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	if (EVP_PKEY_verify(ctx, licenseSignature, sizeof(licenseSignature), (unsigned char *)licenseContent.c_str(), licenseContent.size()) <= 0)
+	// PKCS1 padding scheme
+	if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0)
+	{
+		std::cerr << "Failed to set RSA padding" << std::endl;
+		EVP_PKEY_CTX_free(ctx);
+		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
+		return false;
+	}
+
+	// SHA256 digest
+	if (EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha256()) <= 0)
+	{
+		std::cerr << "Failed to set signature MD" << std::endl;
+		EVP_PKEY_CTX_free(ctx);
+		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
+		return false;
+	}
+
+	if (EVP_PKEY_verify(ctx, licenseSignature, sizeof(licenseSignature), licenseContent, sizeof(licenseContent)) <= 0)
 	{
 		std::cerr << "Failed to verify license" << std::endl;
 		EVP_PKEY_CTX_free(ctx);
-		BIO_free_all(bio);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
 	EVP_PKEY_CTX_free(ctx);
-	BIO_free_all(bio);
 	EVP_PKEY_free(pkey);
 
 	return true;

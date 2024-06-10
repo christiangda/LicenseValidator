@@ -10,4 +10,7 @@ std::vector<std::string> ssplit(std::string str, std::string delim);
 // Replace a substring with another substring
 std::string sreplace(std::string str, const std::string &from, const std::string &to);
 
+// Print a hex string
+void printHex(const unsigned char *data, size_t size);
+
 #endif // UTILS_H
