@@ -114,10 +114,12 @@ int main(int argc, char **argv)
 	std::string licenseSignature = base64Decode(licenseSignatureBase64);
 
 	// convert the licenseContent and licenseSignature from string to unsigned char *
-	// const unsigned char *licenseContentBytes = reinterpret_cast<const unsigned char *>(licenseContent.c_str());
-	// const unsigned char *licenseSignatureBytes = reinterpret_cast<const unsigned char *>(licenseSignature.c_str());
 	std::vector<unsigned char> licenseContentBytes(licenseContent.begin(), licenseContent.end());
 	std::vector<unsigned char> licenseSignatureBytes(licenseSignature.begin(), licenseSignature.end());
+
+	// print size of licenseContentBytes and licenseSignatureBytes
+	std::cout << "licenseContentBytes.size() = " << licenseContentBytes.size() << std::endl;
+	std::cout << "licenseSignatureBytes.size() = " << licenseSignatureBytes.size() << std::endl;
 
 	// show the decoded strings
 	std::cout
@@ -127,6 +129,9 @@ int main(int argc, char **argv)
 						<< licenseContent << std::endl;
 	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
 	printHex(licenseSignatureBytes);
+	std::cout << std::endl;
+	std::cout << "License Content: (hexdump license.txt)" << std::endl;
+	printHex(licenseContentBytes);
 
 	std::cout << std::endl;
 
