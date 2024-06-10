@@ -98,3 +98,13 @@ To run the program, you must pass the license.key and the public key as argument
 ```bash
 ./build/LicenseValidator --license-key $(cat license.key) --public-key-base64 $(base64 --input public-key-rsa.pem | tr -d '\n')
 ```
+
+## References
+
++ [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
++ [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
++ [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
