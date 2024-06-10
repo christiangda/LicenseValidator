@@ -1,6 +1,6 @@
-# license-validator
+# LicenseValidator
 
-This is c++ project to validate license files base on the public key
+This is c++ example project to validate a custom license file using cryptographic verification.
 
 ## How to License the software
 
