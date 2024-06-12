@@ -2,12 +2,34 @@
 
 This is c++ example project to validate a custom license file using cryptographic verification.
 
-## How to License the software
+The idea is to create a license.txt file with the product name, Unique device identifier, and expiration date.
 
-Create a Private and Public Key pair using the `openssl` tool. The private key will be used to sign the license, and the public key will be used to verify the signature.
-The license file will contain information such as the product name, license key, and expiration date. This file will be signed using the private key to generate a signature file.
+The `License.txt` file will have the following format:
+
+```text
+Product Name: My Product
+Device ID: 18443010C117490E00
+Expires: 2024-06-30 23:59:59
+```
+
+and then sign this file using a private key to generate a signature file.  The signature file will be used to verify the license file using a public key.
+
+The `license.key` file have the following format:
+
+```text
+key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
+public-key|{PUBLIC_KEY_BASE64}
+```
+
+Where:
+
+- LICENSE_KEY_BASE64 is the base64 encoded license file.
+- LICENSE_KEY_SIGNATURE_BASE64 is the base64 encoded signature file.
+- PUBLIC_KEY_BASE64 is the base64 encoded public key.
 
 ## Process
+
+Using the `openssl` tool, we can generate a `private` and `public key pair` and having created a license file, sign it, and then verify the license using the public key.
 
 ### 1. Generate a Private and Public Key
 
@@ -26,7 +48,7 @@ openssl rsa -in private-key-rsa.pem -pubout -out public-key-rsa.pem
 Once you have generated a private key, you can use it to sign the license:
 
 ```bash
-# Create a license file with the product na+me, license key, and expiration date
+# Create a license file with the product name, license key, and expiration date
 echo "Product Name: My Product" > license.txt
 echo "Device ID: 18443010C117490E00" >> license.txt
 echo -n "Expires: 2024-06-30 23:59:59" >> license.txt
@@ -74,11 +96,13 @@ format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 # Create a license.key file with the public key and the license file (SHA256)
 cat > license.key <<EOF
 key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')
+public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')
 EOF
 
 # Create a license.key file with the public key and the license file (SHA1)
 cat > license.key <<EOF
 key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha1.sign | tr -d '\n')
+public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')
 EOF
 ```
 
@@ -106,10 +130,10 @@ To run the program, you must pass the license.key and the public key as argument
 
 ```bash
 # using arguments
-./build/LicenseValidator --license-key $(cat license.key) --public-key-base64 $(base64 --input public-key-rsa.pem | tr -d '\n')
+./build/LicenseValidator --license-key $(cat license.key)
 
 # using files
-./build/LicenseValidator --public-key-file public-key-rsa.pem --license-key-file license.key
+./build/LicenseValidator --license-key-file license.key
 ```
 
 How to get the number of bytes of files:
@@ -118,15 +142,14 @@ How to get the number of bytes of files:
 stat -f%z license.txt
 stat -f%z license.txt.sha256.sign
 stat -f%z public-key-rsa.pem
-
 ```
 
 ## References
 
-+ [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
-+ [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
-+ [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
-+ [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
+- [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
+- [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
+- [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
+- [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
 
 ## License
 
