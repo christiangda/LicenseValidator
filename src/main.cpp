@@ -75,14 +75,7 @@ int main(int argc, char **argv)
 	const std::string LICENSE_KEY_PREFIX = "key";
 
 	std::vector<std::string> parts = ssplit(licenseKey, LICENSE_DELIMITER);
-	if (parts.size() != 0)
-	{
-		std::cout << "parts.size() = " << parts.size() << std::endl;
-		for (auto &part : parts)
-		{
-			std::cout << "part = " << part << std::endl;
-		}
-	}
+
 	if (parts.size() != 2)
 	{
 		std::cerr << "Invalid license.key file, no '" << LICENSE_DELIMITER << "' separator" << std::endl;
@@ -117,19 +110,27 @@ int main(int argc, char **argv)
 	const unsigned char *licenseContentBytes = reinterpret_cast<const unsigned char *>(licenseContent.c_str());
 	const unsigned char *licenseSignatureBytes = reinterpret_cast<const unsigned char *>(licenseSignature.c_str());
 
+	// size of the licenseContent and licenseSignature
+	size_t licenseContentSize = licenseContent.size();
+	size_t licenseSignatureSize = licenseSignature.size();
+
 	// show the decoded strings
+	std::cout << std::endl;
 	std::cout
 			<< "Public Key: \n"
 			<< publicKey << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Content: \n"
 						<< licenseContent << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
 	printHex(licenseSignatureBytes, licenseSignature.size());
-
 	std::cout << std::endl;
 
 	// validate the license key
-	bool valid = verifyLicense(licenseContentBytes, licenseSignatureBytes, publicKey);
+	bool valid = verifyLicense(licenseContentBytes, licenseContentSize, licenseSignatureBytes, licenseSignatureSize, publicKey);
 
 	// show the result
 	if (valid)

@@ -76,12 +76,21 @@ EVP_PKEY *loadRsaPemPubKey(const std::string pubkey)
 }
 
 // Validate a license key
-bool verifyLicense(const unsigned char *licenseContent, const unsigned char *licenseSignature, const std::string pubkey)
+bool verifyLicense(const unsigned char *licenseContent, size_t licenseContentSize, const unsigned char *licenseSignature, size_t licenseSignatureSize, const std::string pubkey)
 {
 	EVP_PKEY *pkey = loadRsaPemPubKey(pubkey);
 	if (pkey == NULL)
 	{
 		std::cerr << "Failed to load public key" << std::endl;
+		ERR_print_errors_fp(stdout);
+		return false;
+	}
+
+	// verify the public key is RSA
+	if (EVP_PKEY_id(pkey) != EVP_PKEY_RSA)
+	{
+		std::cerr << "Public key is not RSA" << std::endl;
+		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
@@ -124,7 +133,8 @@ bool verifyLicense(const unsigned char *licenseContent, const unsigned char *lic
 		return false;
 	}
 
-	if (EVP_PKEY_verify(ctx, licenseSignature, sizeof(licenseSignature), licenseContent, sizeof(licenseContent)) <= 0)
+	// Verify the license
+	if (EVP_PKEY_verify(ctx, licenseSignature, licenseSignatureSize, licenseContent, licenseContentSize) <= 0)
 	{
 		std::cerr << "Failed to verify license" << std::endl;
 		EVP_PKEY_CTX_free(ctx);

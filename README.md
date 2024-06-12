@@ -27,14 +27,15 @@ Once you have generated a private key, you can use it to sign the license:
 
 ```bash
 # Create a license file with the product na+me, license key, and expiration date
-cat > license.txt <<EOF
-Product Name: My Product
-Device ID: 18443010C117490E00
-Expires: 2024-06-30
-EOF
+echo "Product Name: My Product" > license.txt
+echo "Device ID: 18443010C117490E00" >> license.txt
+echo -n "Expires: 2024-06-30 23:59:59" >> license.txt
 
 # Sign the license data with SHA256 hashing and RSA algorithm
 openssl dgst -sha256 -sign private-key-rsa.pem -out license.txt.sha256.sign license.txt
+
+# Sign the license data with SHA1 hashing and RSA algorithm
+openssl dgst -sha1 -sign private-key-rsa.pem -out license.txt.sha1.sign license.txt
 ```
 
 This will generate a signature file `license.txt.sha256.sign`, which is binary data that can be used to verify the license.
@@ -46,8 +47,11 @@ For license verification, the customer's software needs your public key to verif
 The verification process looks like this:
 
 ```bash
-# # Sign the file using sha256 digest and PKCS1 padding scheme
+# Sign the file using sha256 digest and PKCS1 padding scheme
 openssl dgst -sha256 -verify public-key-rsa.pem -signature license.txt.sha256.sign license.txt
+
+# Sign the file using sha1 digest and PKCS1 padding scheme
+openssl dgst -sha1 -verify public-key-rsa.pem -signature license.txt.sha1.sign license.txt
 ```
 
 If the license is valid, this command will print `Verified OK`. Otherwise, it will print `Verification Failure`.
@@ -67,9 +71,14 @@ We must create a license.key file with the public key and the license file. This
 format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 
 ```bash
-# Create a license.key file with the public key and the license file
+# Create a license.key file with the public key and the license file (SHA256)
 cat > license.key <<EOF
 key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')
+EOF
+
+# Create a license.key file with the public key and the license file (SHA1)
+cat > license.key <<EOF
+key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha1.sign | tr -d '\n')
 EOF
 ```
 
@@ -104,6 +113,7 @@ To run the program, you must pass the license.key and the public key as argument
 + [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
 + [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
 + [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
++ [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
 
 ## License
 
