@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 	// Global Options
 	po::options_description globalOptions("Global Options");
 	globalOptions.add_options()("license-key-file", po::value<std::string>(), "License key file in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}");
+	globalOptions.add_options()("public-key-file", po::value<std::string>(), "Public key file.");
 	globalOptions.add_options()("debug", po::value<bool>()->default_value(false), "Enable debug mode");
 
 	po::options_description allOptions;
@@ -71,7 +72,18 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	if (!vm.count("public-key-file"))
+	{
+		std::cerr << "❌ -> Public key is required (--public-key-file)" << std::endl;
+		return EXIT_FAILURE;
+	}
+
 	// get the values of the options
+	std::string publicKeyFile = vm["public-key-file"].as<std::string>();
+	std::vector<unsigned char> publicKeyBytes = readFile(publicKeyFile.c_str());
+
+	std::string publicKey = std::string(publicKeyBytes.begin(), publicKeyBytes.end());
+
 	std::string licenseKeyFile = vm["license-key-file"].as<std::string>();
 	std::vector<unsigned char> licenseKeyBytes = readFile(licenseKeyFile.c_str());
 
@@ -94,25 +106,21 @@ int main(int argc, char **argv)
 	const std::string LICENSE_DELIMITER = "|";
 	const std::string LICENSE_KEY_DELIMITER = ".";
 	const std::string LICENSE_KEY_PREFIX = "key";
-	const std::string LICENSE_PUBLIC_KEY_PREFIX = "public-key";
 
 	// get the first line and second line
 	std::vector<std::string> licenseKeyLines = ssplit(licenseKey, "\n");
-	if (licenseKeyLines.size() != 2)
+	if (licenseKeyLines.size() != 1)
 	{
 		std::cerr << "❌ -> Invalid license.key file, does not have the number of lines expected" << std::endl;
-		std::cerr << "❌ -> Expected 2 lines, but got " << licenseKeyLines.size() << " lines" << std::endl;
+		std::cerr << "❌ -> Expected 1 lines, but got " << licenseKeyLines.size() << " lines" << std::endl;
 		std::cerr << "❌ -> Please check the file content" << std::endl;
 		return EXIT_FAILURE;
 	}
 	std::string firstLine = licenseKeyLines[0];
-	std::string secondLine = licenseKeyLines[1];
 
 	if (debug)
 	{
 		std::cout << "license.key first line: " << firstLine << std::endl;
-		std::cout << std::endl;
-		std::cout << "license.key second line: " << secondLine << std::endl;
 		std::cout << std::endl;
 	}
 
@@ -149,28 +157,6 @@ int main(int argc, char **argv)
 	// convert to std::vector<unsigned char> (bytes)
 	std::vector<unsigned char> licenseContentBytes = std::vector<unsigned char>(licenseContent.begin(), licenseContent.end());
 	std::vector<unsigned char> licenseSignatureBytes = std::vector<unsigned char>(licenseSignature.begin(), licenseSignature.end());
-
-	// get the public key
-	std::vector<std::string> secondLineParts = ssplit(secondLine, LICENSE_DELIMITER);
-	if (secondLineParts.size() != 2)
-	{
-		std::cerr << "❌ -> Invalid license.key file (second line), no '" << LICENSE_DELIMITER << "' separator" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	std::string publicKeyIdentifier = secondLineParts[0];
-	std::string publicKeyBase64 = secondLineParts[1];
-
-	// check the identifier is public-key
-	if (publicKeyIdentifier != LICENSE_PUBLIC_KEY_PREFIX)
-	{
-		std::cerr << "❌ -> Invalid license.key file (second line), invalid identifier, not '" << LICENSE_PUBLIC_KEY_PREFIX << "' present" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	// decode (base64) the public key
-	std::string publicKey = base64Decode(publicKeyBase64);
-	std::vector<unsigned char> publicKeyBytes = std::vector<unsigned char>(publicKey.begin(), publicKey.end());
 
 	if (debug)
 	{
