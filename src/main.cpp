@@ -20,8 +20,7 @@ int main(int argc, char **argv)
 
 	// Global Options
 	po::options_description globalOptions("Global Options");
-	globalOptions.add_options()("license-key", po::value<std::string>(), "License key content in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}. Mutually exclusive with --license-key-file");
-	globalOptions.add_options()("license-key-file", po::value<std::string>(), "License key file in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}. Mutually exclusive with --license-key");
+	globalOptions.add_options()("license-key-file", po::value<std::string>(), "License key file in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}");
 	globalOptions.add_options()("debug", po::value<bool>()->default_value(false), "Enable debug mode");
 
 	po::options_description allOptions;
@@ -32,6 +31,17 @@ int main(int argc, char **argv)
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(allOptions).run(), vm);
 	po::notify(vm);
+
+	// catch the exception of the required options
+	try
+	{
+		po::notify(vm);
+	}
+	catch (const po::error &e)
+	{
+		std::cerr << "❌ -> " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	// if no options are provided, show help
 	if (argc == 1)
@@ -55,30 +65,17 @@ int main(int argc, char **argv)
 	}
 
 	// check for required options
-	if (!vm.count("license-key") && !vm.count("license-key-file"))
+	if (!vm.count("license-key-file"))
 	{
-		std::cerr << "❌ -> License key is required (--license-key or --license-key-file)" << std::endl;
-		return EXIT_FAILURE;
-	}
-	else if (vm.count("license-key") && vm.count("license-key-file"))
-	{
-		std::cerr << "❌ -> License key is required (--license-key or --license-key-file), but not both" << std::endl;
+		std::cerr << "❌ -> License key is required (--license-key-file)" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// get the values of the options
-	std::string licenseKey;
-	if (vm.count("license-key"))
-	{
-		licenseKey = vm["license-key"].as<std::string>();
-	}
-	else
-	{
-		std::string licenseKeyFile = vm["license-key-file"].as<std::string>();
-		std::vector<unsigned char> licenseKeyBytes = readFile(licenseKeyFile.c_str());
+	std::string licenseKeyFile = vm["license-key-file"].as<std::string>();
+	std::vector<unsigned char> licenseKeyBytes = readFile(licenseKeyFile.c_str());
 
-		licenseKey = std::string(licenseKeyBytes.begin(), licenseKeyBytes.end());
-	}
+	std::string licenseKey = std::string(licenseKeyBytes.begin(), licenseKeyBytes.end());
 
 	// debug mode
 	bool debug = vm["debug"].as<bool>();

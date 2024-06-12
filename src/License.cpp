@@ -98,54 +98,69 @@ bool verifyLicense(const std::vector<unsigned char> licenseContent, const std::v
 		return false;
 	}
 
-	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	EVP_MD_CTX *ctx = nullptr;
+
+	ctx = EVP_MD_CTX_create();
 	if (ctx == nullptr)
 	{
-		std::cerr << "Failed to create EVP_PKEY_CTX" << std::endl;
+		std::cerr << "Failed to create EVP_MD_CTX" << std::endl;
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	if (EVP_PKEY_verify_init(ctx) <= 0)
+	// configure digest
+	const EVP_MD *md = EVP_get_digestbyname("SHA256");
+	if (md == nullptr)
 	{
-		std::cerr << "Failed to initialize EVP_PKEY_CTX" << std::endl;
-		EVP_PKEY_CTX_free(ctx);
+		std::cerr << "Failed to get SHA256 digest" << std::endl;
+		EVP_MD_CTX_destroy(ctx);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	// PKCS1 padding scheme
-	if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0)
+	int rc = EVP_DigestInit_ex(ctx, md, NULL);
+	if (rc != 1)
 	{
-		std::cerr << "Failed to set RSA padding" << std::endl;
-		EVP_PKEY_CTX_free(ctx);
+		std::cerr << "Failed to initialize digest" << std::endl;
+		EVP_MD_CTX_destroy(ctx);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	// SHA256 digest
-	if (EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha256()) <= 0)
+	rc = EVP_DigestVerifyInit(ctx, NULL, md, NULL, pkey);
+	if (rc != 1)
 	{
-		std::cerr << "Failed to set signature MD" << std::endl;
-		EVP_PKEY_CTX_free(ctx);
+		std::cerr << "Failed to initialize verify" << std::endl;
+		EVP_MD_CTX_destroy(ctx);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	if (EVP_PKEY_verify(ctx, licenseSignature.data(), licenseSignature.size(), licenseContent.data(), licenseContent.size()) <= 0)
+	rc = EVP_DigestVerifyUpdate(ctx, licenseContent.data(), licenseContent.size());
+	if (rc != 1)
 	{
-		std::cerr << "Failed to verify license" << std::endl;
-		EVP_PKEY_CTX_free(ctx);
+		std::cerr << "Failed to update verify" << std::endl;
+		EVP_MD_CTX_destroy(ctx);
 		EVP_PKEY_free(pkey);
 		ERR_print_errors_fp(stdout);
 		return false;
 	}
 
-	EVP_PKEY_CTX_free(ctx);
+	rc = EVP_DigestVerifyFinal(ctx, licenseSignature.data(), licenseSignature.size());
+	if (rc != 1)
+	{
+		std::cerr << "Failed to finalize verify" << std::endl;
+		EVP_MD_CTX_destroy(ctx);
+		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
+		return false;
+	}
+
+	EVP_MD_CTX_destroy(ctx);
 	EVP_PKEY_free(pkey);
 
 	return true;
