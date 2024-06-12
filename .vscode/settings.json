@@ -115,6 +115,7 @@
     "depthai",
     "FACEAGEGENDERDETECTOR",
     "FACEDETECTOR",
+    "hexdump",
     "imshow",
     "KEYMGMT",
     "KEYPAIR",

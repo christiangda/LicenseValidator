@@ -75,14 +75,7 @@ int main(int argc, char **argv)
 	const std::string LICENSE_KEY_PREFIX = "key";
 
 	std::vector<std::string> parts = ssplit(licenseKey, LICENSE_DELIMITER);
-	if (parts.size() != 0)
-	{
-		std::cout << "parts.size() = " << parts.size() << std::endl;
-		for (auto &part : parts)
-		{
-			std::cout << "part = " << part << std::endl;
-		}
-	}
+
 	if (parts.size() != 2)
 	{
 		std::cerr << "Invalid license.key file, no '" << LICENSE_DELIMITER << "' separator" << std::endl;
@@ -125,18 +118,23 @@ int main(int argc, char **argv)
 			<< "licenseContentBytes.size() = " << licenseContentBytes.size() << std::endl;
 	std::cout << "licenseSignatureBytes.size() = " << licenseSignatureBytes.size() << std::endl;
 
+	// size of the licenseContent and licenseSignature
+	size_t licenseContentSize = licenseContent.size();
+	size_t licenseSignatureSize = licenseSignature.size();
+
 	// show the decoded strings
+	std::cout << std::endl;
 	std::cout
 			<< "Public Key: \n"
 			<< publicKey << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Content: \n"
 						<< licenseContent << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
 	printHex(licenseSignatureBytes);
-	std::cout << std::endl;
-	std::cout << "License Content: (hexdump license.txt)" << std::endl;
-	printHex(licenseContentBytes);
-
 	std::cout << std::endl;
 
 	// validate the license key
