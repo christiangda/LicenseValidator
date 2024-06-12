@@ -124,6 +124,7 @@ bool verifyLicense(const unsigned char *licenseContent, size_t licenseContentSiz
 		return false;
 	}
 
+	// Verify the license
 	if (EVP_PKEY_verify(ctx, licenseSignature, licenseSignatureSize, licenseContent, licenseContentSize) <= 0)
 	{
 		std::cerr << "Failed to verify license" << std::endl;

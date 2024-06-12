@@ -113,6 +113,7 @@ To run the program, you must pass the license.key and the public key as argument
 + [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
 + [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
 + [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
++ [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
 
 ## License
 
