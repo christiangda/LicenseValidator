@@ -86,6 +86,15 @@ bool verifyLicense(const unsigned char *licenseContent, size_t licenseContentSiz
 		return false;
 	}
 
+	// verify the public key is RSA
+	if (EVP_PKEY_id(pkey) != EVP_PKEY_RSA)
+	{
+		std::cerr << "Public key is not RSA" << std::endl;
+		EVP_PKEY_free(pkey);
+		ERR_print_errors_fp(stdout);
+		return false;
+	}
+
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	if (ctx == NULL)
 	{

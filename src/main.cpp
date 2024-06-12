@@ -75,14 +75,7 @@ int main(int argc, char **argv)
 	const std::string LICENSE_KEY_PREFIX = "key";
 
 	std::vector<std::string> parts = ssplit(licenseKey, LICENSE_DELIMITER);
-	if (parts.size() != 0)
-	{
-		std::cout << "parts.size() = " << parts.size() << std::endl;
-		for (auto &part : parts)
-		{
-			std::cout << "part = " << part << std::endl;
-		}
-	}
+
 	if (parts.size() != 2)
 	{
 		std::cerr << "Invalid license.key file, no '" << LICENSE_DELIMITER << "' separator" << std::endl;
@@ -122,6 +115,7 @@ int main(int argc, char **argv)
 	size_t licenseSignatureSize = licenseSignature.size();
 
 	// show the decoded strings
+	std::cout << std::endl;
 	std::cout
 			<< "Public Key: \n"
 			<< publicKey << std::endl;
