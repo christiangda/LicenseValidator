@@ -1,7 +1,9 @@
 #include <boost/program_options.hpp>
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 #include "Config.h"
 #include "License.h"
@@ -18,8 +20,10 @@ int main(int argc, char **argv)
 
 	// Global Options
 	po::options_description globalOptions("Global Options");
-	globalOptions.add_options()("public-key-base64", po::value<std::string>(), "Public key in base64 format");
-	globalOptions.add_options()("license-key", po::value<std::string>(), "License key content in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}");
+	globalOptions.add_options()("public-key-base64", po::value<std::string>(), "Public key in base64 format. Mutually exclusive with --public-key-file");
+	globalOptions.add_options()("license-key", po::value<std::string>(), "License key content in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}. Mutually exclusive with --license-key-file");
+	globalOptions.add_options()("public-key-file", po::value<std::string>(), "Public key file in PEM format. Mutually exclusive with --public-key-base64");
+	globalOptions.add_options()("license-key-file", po::value<std::string>(), "License key file in format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}. Mutually exclusive with --license-key");
 
 	po::options_description allOptions;
 	allOptions.add(helpVersionOptions);
@@ -52,21 +56,58 @@ int main(int argc, char **argv)
 	}
 
 	// check for required options
-	if (!vm.count("public-key-base64"))
+	if (!vm.count("public-key-base64") && !vm.count("public-key-file"))
 	{
-		std::cerr << "Public key is required (--public-key-base64)" << std::endl;
+		std::cerr << "Public key is required (--public-key-base64 or --public-key-file)" << std::endl;
+		return EXIT_FAILURE;
+	}
+	else if (vm.count("public-key-base64") && vm.count("public-key-file"))
+	{
+		std::cerr << "Public key is required (--public-key-base64 or --public-key-file), but not both" << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	if (!vm.count("license-key"))
+	if (!vm.count("license-key") && !vm.count("license-key-file"))
 	{
-		std::cerr << "License key is required (--license-key)" << std::endl;
+		std::cerr << "License key is required (--license-key or --license-key-file)" << std::endl;
+		return EXIT_FAILURE;
+	}
+	else if (vm.count("license-key") && vm.count("license-key-file"))
+	{
+		std::cerr << "License key is required (--license-key or --license-key-file), but not both" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// get the values of the options
-	std::string publicKeyBase64 = vm["public-key-base64"].as<std::string>();
-	std::string licenseKey = vm["license-key"].as<std::string>();
+	std::string publicKey;
+	std::string licenseKey;
+	std::vector<unsigned char> publicKeyBytes;
+	std::vector<unsigned char> licenseContentBytes;
+	std::vector<unsigned char> licenseSignatureBytes;
+
+	if (vm.count("public-key-base64"))
+	{
+		std::string publicKeyBase64 = vm["public-key-base64"].as<std::string>();
+		publicKey = base64Decode(publicKeyBase64);
+		publicKeyBytes = std::vector<unsigned char>(publicKey.begin(), publicKey.end());
+	}
+	else
+	{
+		std::string publicKeyFile = vm["public-key-file"].as<std::string>();
+		publicKeyBytes = readFile(publicKeyFile.c_str());
+	}
+
+	if (vm.count("license-key"))
+	{
+		licenseKey = vm["license-key"].as<std::string>();
+	}
+	else
+	{
+		std::string licenseKeyFile = vm["license-key-file"].as<std::string>();
+		std::vector<unsigned char> licenseKeyBytes = readFile(licenseKeyFile.c_str());
+
+		licenseKey = std::string(licenseKeyBytes.begin(), licenseKeyBytes.end());
+	}
 
 	// License key has the format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 	// we need to split the key and signature
@@ -102,42 +143,21 @@ int main(int argc, char **argv)
 	std::string licenseSignatureBase64 = keySignature[1];
 
 	// decode (base64) the public key, license content and license signature
-	std::string publicKey = base64Decode(publicKeyBase64);
 	std::string licenseContent = base64Decode(licenseContentBase64);
 	std::string licenseSignature = base64Decode(licenseSignatureBase64);
 
-	// convert the licenseContent and licenseSignature from string to unsigned char *
-	std::vector<unsigned char> licenseContentBytes(licenseContent.begin(), licenseContent.end());
-	std::vector<unsigned char> licenseSignatureBytes(licenseSignature.begin(), licenseSignature.end());
+	// convert to std::vector<unsigned char> (bytes)
+	licenseContentBytes = std::vector<unsigned char>(licenseContent.begin(), licenseContent.end());
+	licenseSignatureBytes = std::vector<unsigned char>(licenseSignature.begin(), licenseSignature.end());
 
-	// std::string signatureFile = "license.txt.sha256.sign";
-	// std::vector<unsigned char> licenseSignatureBytes = readFile(signatureFile.c_str());
-
-	// print size of licenseContentBytes and licenseSignatureBytes
-	std::cout << "licenseContentBytes.size() = " << licenseContentBytes.size() << std::endl;
-	std::cout << "licenseSignatureBytes.size() = " << licenseSignatureBytes.size() << std::endl;
-
-	// size of the licenseContent and licenseSignature
-	size_t licenseContentSize = licenseContent.size();
-	size_t licenseSignatureSize = licenseSignature.size();
-
-	// show the decoded strings
-	std::cout << std::endl;
-	std::cout
-			<< "Public Key: \n"
-			<< publicKey << std::endl;
-	std::cout << std::endl;
-
-	std::cout << "License Content: \n"
-						<< licenseContent << std::endl;
-	std::cout << std::endl;
-
-	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
-	printHex(licenseSignatureBytes);
+	// size of the files in bytes
+	std::cout << "Number of bytes of the license file: " << licenseContentBytes.size() << std::endl;
+	std::cout << "Number of bytes of the license signature file: " << licenseSignatureBytes.size() << std::endl;
+	std::cout << "Number of bytes of the public key file:  " << publicKeyBytes.size() << std::endl;
 	std::cout << std::endl;
 
 	// validate the license key
-	bool valid = verifyLicense(licenseContentBytes, licenseSignatureBytes, publicKey);
+	bool valid = verifyLicense(licenseContentBytes, licenseSignatureBytes, publicKeyBytes);
 
 	// show the result
 	if (valid)

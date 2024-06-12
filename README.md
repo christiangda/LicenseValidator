@@ -105,7 +105,20 @@ cmake --build build
 To run the program, you must pass the license.key and the public key as arguments. The program will validate the license and print the result.
 
 ```bash
+# using arguments
 ./build/LicenseValidator --license-key $(cat license.key) --public-key-base64 $(base64 --input public-key-rsa.pem | tr -d '\n')
+
+# using files
+./build/LicenseValidator --public-key-file public-key-rsa.pem --license-key-file license.key
+```
+
+How to get the number of bytes of files:
+
+```bash
+stat -f%z license.txt
+stat -f%z license.txt.sha256.sign
+stat -f%z public-key-rsa.pem
+
 ```
 
 ## References
