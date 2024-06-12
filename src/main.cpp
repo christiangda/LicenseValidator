@@ -125,11 +125,14 @@ int main(int argc, char **argv)
 	std::cout
 			<< "Public Key: \n"
 			<< publicKey << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Content: \n"
 						<< licenseContent << std::endl;
+	std::cout << std::endl;
+
 	std::cout << "License Signature: (hexdump license.txt.sha256.sign)" << std::endl;
 	printHex(licenseSignatureBytes, licenseSignature.size());
-
 	std::cout << std::endl;
 
 	// validate the license key
