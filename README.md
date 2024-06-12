@@ -27,6 +27,14 @@ Where:
 - LICENSE_KEY_SIGNATURE_BASE64 is the base64 encoded signature file.
 - PUBLIC_KEY_BASE64 is the base64 encoded public key.
 
+## References
+
+- [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
+- [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
+- [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
+- [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
+- [EVP Signing and Verifying](https://wiki.openssl.org/index.php/EVP_Signing_and_Verifying)
+
 ## Process
 
 Using the `openssl` tool, we can generate a `private` and `public key pair` and having created a license file, sign it, and then verify the license using the public key.
@@ -55,9 +63,6 @@ echo -n "Expires: 2024-06-30 23:59:59" >> license.txt
 
 # Sign the license data with SHA256 hashing and RSA algorithm
 openssl dgst -sha256 -sign private-key-rsa.pem -out license.txt.sha256.sign license.txt
-
-# Sign the license data with SHA1 hashing and RSA algorithm
-openssl dgst -sha1 -sign private-key-rsa.pem -out license.txt.sha1.sign license.txt
 ```
 
 This will generate a signature file `license.txt.sha256.sign`, which is binary data that can be used to verify the license.
@@ -71,9 +76,6 @@ The verification process looks like this:
 ```bash
 # Sign the file using sha256 digest and PKCS1 padding scheme
 openssl dgst -sha256 -verify public-key-rsa.pem -signature license.txt.sha256.sign license.txt
-
-# Sign the file using sha1 digest and PKCS1 padding scheme
-openssl dgst -sha1 -verify public-key-rsa.pem -signature license.txt.sha1.sign license.txt
 ```
 
 If the license is valid, this command will print `Verified OK`. Otherwise, it will print `Verification Failure`.
@@ -94,17 +96,11 @@ format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 
 ```bash
 # Create a license.key file with the public key and the license file (SHA256)
-cat > license.key <<EOF
-key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')
-public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')
-EOF
-
-# Create a license.key file with the public key and the license file (SHA1)
-cat > license.key <<EOF
-key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha1.sign | tr -d '\n')
-public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')
-EOF
+echo "key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')" > license.key
+echo "public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')" >> license.key
 ```
+
+This will generate a `license.key` file that contains the base64 encoded license file and signature file, as well as the public key.
 
 ### 6. License Validation (using the LicenseValidator program)
 
@@ -129,10 +125,6 @@ cmake --build build
 To run the program, you must pass the license.key and the public key as arguments. The program will validate the license and print the result.
 
 ```bash
-# using arguments
-./build/LicenseValidator --license-key $(cat license.key)
-
-# using files
 ./build/LicenseValidator --license-key-file license.key
 ```
 
@@ -143,13 +135,6 @@ stat -f%z license.txt
 stat -f%z license.txt.sha256.sign
 stat -f%z public-key-rsa.pem
 ```
-
-## References
-
-- [Example C++ Cryptographic Verification](https://github.com/keygen-sh/example-cpp-cryptographic-verification/blob/master/README.md)
-- [OpenSSL libraries](https://www.openssl.org/docs/man3.1/man3/index.html)
-- [Boost libraries](https://www.boost.org/doc/libs/1_85_0/libs/libraries.htm)
-- [How to sign and verify using OpenSSL](https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/)
 
 ## License
 
