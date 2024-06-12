@@ -108,10 +108,10 @@ int main(int argc, char **argv)
 
 	// convert the licenseContent and licenseSignature from string to unsigned char *
 	std::vector<unsigned char> licenseContentBytes(licenseContent.begin(), licenseContent.end());
-	// std::vector<unsigned char> licenseSignatureBytes(licenseSignature.begin(), licenseSignature.end());
+	std::vector<unsigned char> licenseSignatureBytes(licenseSignature.begin(), licenseSignature.end());
 
-	std::string signatureFile = "license.txt.sha256.sign";
-	std::vector<unsigned char> licenseSignatureBytes = readFile(signatureFile.c_str());
+	// std::string signatureFile = "license.txt.sha256.sign";
+	// std::vector<unsigned char> licenseSignatureBytes = readFile(signatureFile.c_str());
 
 	// print size of licenseContentBytes and licenseSignatureBytes
 	std::cout
