@@ -18,7 +18,6 @@ The `license.key` file have the following format:
 
 ```text
 key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
-public-key|{PUBLIC_KEY_BASE64}
 ```
 
 Where:
@@ -96,8 +95,7 @@ format: key|{LICENSE_KEY_BASE64}.{LICENSE_KEY_SIGNATURE_BASE64}
 
 ```bash
 # Create a license.key file with the public key and the license file (SHA256)
-echo "key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')" > license.key
-echo "public-key|$(base64 --input public-key-rsa.pem | tr -d '\n')" >> license.key
+echo -n "key|$(base64 --input license.txt | tr -d '\n').$(base64 --input license.txt.sha256.sign | tr -d '\n')" > license.key
 ```
 
 This will generate a `license.key` file that contains the base64 encoded license file and signature file, as well as the public key.
@@ -125,7 +123,7 @@ cmake --build build
 To run the program, you must pass the license.key and the public key as arguments. The program will validate the license and print the result.
 
 ```bash
-./build/LicenseValidator --license-key-file license.key
+./build/LicenseValidator --license-key-file license.key --public-key-file public-key-rsa.pem
 ```
 
 How to get the number of bytes of files:
