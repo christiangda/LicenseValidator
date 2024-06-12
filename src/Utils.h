@@ -13,4 +13,7 @@ std::string sreplace(std::string str, const std::string &from, const std::string
 // Print a hex string
 void printHex(std::vector<unsigned char> data);
 
+// read a file into a vector of bytes
+std::vector<unsigned char> readFile(const char *filename);
+
 #endif // UTILS_H

@@ -1,3 +1,0 @@
-Product Name: FaceDetector
-Device ID: 18443010C117490E00
-Expires: 2024-06-30
