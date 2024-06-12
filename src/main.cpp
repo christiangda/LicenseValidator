@@ -114,8 +114,7 @@ int main(int argc, char **argv)
 	// std::vector<unsigned char> licenseSignatureBytes = readFile(signatureFile.c_str());
 
 	// print size of licenseContentBytes and licenseSignatureBytes
-	std::cout
-			<< "licenseContentBytes.size() = " << licenseContentBytes.size() << std::endl;
+	std::cout << "licenseContentBytes.size() = " << licenseContentBytes.size() << std::endl;
 	std::cout << "licenseSignatureBytes.size() = " << licenseSignatureBytes.size() << std::endl;
 
 	// size of the licenseContent and licenseSignature
